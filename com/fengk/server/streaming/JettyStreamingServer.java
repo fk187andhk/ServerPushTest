@@ -1,0 +1,80 @@
+package com.fengk.server.streaming;
+
+/**
+ * The web server used for HTTP Streaming Schema based on Jetty
+ * @author fengk
+ */
+
+import java.util.Date;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+
+import com.fengk.constants.Constants;
+import com.fengk.message.ResultRecorder;
+
+public class JettyStreamingServer {
+    public static StreamingServerQueue messageQueue = new StreamingServerQueue();
+    
+    private Server server;
+    
+    public static int totalReadHttpNum = 0;
+    
+    public static final ResultRecorder logger = 
+            new ResultRecorder("streaming_" + new Date().getTime() + ".csv");
+    
+    public JettyStreamingServer() {
+        server = new Server(Constants.STREAMING_SERVER_PORT);
+    }
+    
+    public void configure() {
+        /**
+         * Because the Jetty server just has one handler one time
+         * So you should use one handler with many different servlets
+         */
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        context.setResourceBase(Constants.SERVER_ROOT_DIRECTORY);
+        context.setClassLoader(Thread.currentThread().getContextClassLoader());
+        /**
+         * Set the static resource handler by the context
+         */
+        context.addServlet(
+                new ServletHolder(new DefaultServlet()), "/");
+        /**
+         * Set the read message servlet
+         */
+        context.addServlet(
+                new ServletHolder(new StreamingMessageServlet()), 
+                Constants.STREAMING_READ_MESSAGE);
+        /**
+         * Set the write message servlet
+         */
+        context.addServlet(
+                new ServletHolder(new GeneratorMessageServlet()), 
+                Constants.STREAMING_WRITE_MESSAGE);
+        
+        server.setHandler(context);
+    }
+    
+    public void startServer() {
+        try {
+            logger.initialize();
+            System.out.println("Streaming server listens on port " + Constants.STREAMING_SERVER_PORT);
+            server.start();
+            server.join();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void stopServer() {
+        try {
+            server.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
