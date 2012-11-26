@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<constants>
+    <system>
+        <time>120</time>
+    </system>
+    <generator>
+        <host>localhost</host>
+        <port>8000</port>
+        <poisson-lamda>5</poisson-lamda>
+    </generator>
+    <servers>
+        <host>localhost</host>
+        <root>E:\server\server_root</root>
+        <number>4</number>
+        <longpolling-hold-time>60</longpolling-hold-time>
+        <longpolling-sleep-time>1</longpolling-sleep-time>
+        <streaming-hold-time>60</streaming-hold-time>
+        <streaming-sleep-time>1</streaming-sleep-time>
+        <polling-port>8001</polling-port>
+        <longpolling-port>8002</longpolling-port>
+        <streaming-port>8003</streaming-port>
+        <websocket-port>8004</websocket-port>
+    </servers>
+</constants>
