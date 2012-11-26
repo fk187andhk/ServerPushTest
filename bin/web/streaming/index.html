@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf8">
+  <title>HTTP Streaming</title>
+  <script type="text/javascript" src="./json5.js"></script>
+  <style type="text/css">
+    #title {
+      text-align: center;
+      font-weight: bold;
+    }
+    #message_iframe {
+      visibility: hidden;
+      height: 1px;
+    }
+    .from {
+      font-weight: bold;
+    }
+    .to {
+      font-weight: bold;
+      color: blue;
+    }
+    .content {
+      color: blue;
+    }
+    .time {
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+  <script type="text/javascript">
+    
+    var streaming_url = "http://localhost:8003/message/streaming_read";
+    
+    function test1() {
+        var temp = '{"count":1,"last":false,"messageList":[{"clientGetDate":"1353934831364","content":"You are the CSS to my HTML"' + 
+                ',"fromId":"Message Generator Robot","id":14,"sendDate":"1353934831343","toId":"STREAMING_CLIENT"}]}';
+        var message_list = JSON5.parse(temp);
+        console.log("count:" + message_list.count);
+        console.log("last:" + message_list.last);
+        console.log("content:" + message_list.messageList[0].content);
+    }
+    
+    function test2(message_list) {
+        console.log("count:" + message_list.count);
+        console.log("last:" + message_list.last);
+        console.log("content:" + message_list.messageList[0].content);
+    }
+    
+    function getMessage() {
+        //test1();
+        /**
+         * Using iframe to get the new messages
+         */
+        var iframe_container = document.getElementById("iframe_container");
+        iframe_container.innerHTML = "";
+        var iframe_node = document.createElement("iframe");
+        iframe_node.setAttribute("id", "message_iframe");
+        iframe_node.setAttribute("src", streaming_url);
+        iframe_container.appendChild(iframe_node);
+    }
+    
+    function dealIframeMessage(data) {
+        var message_list = JSON5.parse(data);
+        var count = message_list.count;
+        if (count != 0) {
+            //test2(message_list);
+            addMessage(message_list.messageList);
+        }
+        var last = message_list.last;
+        if (last != false) {
+            getMessage();
+        }
+    }
+    
+    function addMessage(list) {
+        var html_content = new Array();
+        for (var i = 0; i < list.length; i++) {
+            var li = document.createElement("li");
+            
+            var get_date = new Number(list[i].clientGetDate);
+            var send_date = new Number(list[i].sendDate);
+            var delay = get_date - send_date;
+            
+            var time_now = new Date().getTime();
+            var trans_delay = time_now - get_date;
+            
+            var delay_time = document.createElement("span");
+            var delay_text = document.createTextNode("Delay: " + delay + "ms Transfer: " + trans_delay + "ms  ");
+            delay_time.appendChild(delay_text);
+            delay_time.setAttribute("class", "time");
+            li.appendChild(delay_time);
+            delay_text = document.createTextNode("Message from ");
+            li.appendChild(delay_text);
+            
+            var from_id = document.createElement("span");
+            var from_text = document.createTextNode(list[i].fromId + ": ");;
+            from_id.setAttribute("class", "from");
+            from_id.appendChild(from_text);
+            li.appendChild(from_id);
+            
+            var content = document.createElement("span");
+            //var temp_content_length = list[i].contentLength;
+            //list[i].content = list[i].content.substring(0, temp_content_length);
+            var content_text = document.createTextNode(list[i].content);
+            content.appendChild(content_text);
+            content.setAttribute("class", "content");
+            li.appendChild(content);
+            
+            html_content.push(li);
+        }
+        displayMessage(html_content);
+    }
+    
+    function displayMessage(html_content) {
+        var ul = document.getElementById("message_area_ul");
+        for (var i = 0; i < html_content.length; i++) {
+            ul.appendChild(html_content[i]);
+        }
+    }
+  </script>
+</head>
+
+<body onload="getMessage()">
+  <h1 id="title">Instant Message By HTTP IFrame Streaming</h1>
+  <hr />
+  <div id="message_area">
+    <ul id="message_area_ul"></ul>
+  </div>
+  <div id="iframe_container"></div>
+</body>
+</html>

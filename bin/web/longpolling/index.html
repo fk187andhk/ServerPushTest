@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf8">
+  <title>HTTP Long Polling</title>
+  <script type="text/javascript" src="./jquery.js"></script>
+  <script type="text/javascript" src="./json5.js"></script>
+  <style type="text/css">
+    #title {
+      text-align: center;
+      font-weight: bold;
+    }
+    .from {
+      font-weight: bold;
+    }
+    .to {
+      font-weight: bold;
+      color: blue;
+    }
+    .content {
+      color: blue;
+    }
+    .time {
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+  <script type="text/javascript">
+    $(document).ready(function() {
+        initialize();
+    });
+    
+    var long_polling_url = "/message/longpolling_read";
+    
+    function initialize() {
+        getMessage();
+    }
+    
+    function getMessage() {
+        /**
+         * Using jQuery Ajax to get the message
+         */
+        $.get(long_polling_url, function(data, textStatus) {
+            console.log("The textStatus is: " + textStatus);
+            if (textStatus == "success") {
+                var message_list = JSON5.parse(data);
+                var count = message_list.count;
+                if (count != 0) {
+                    addMessage(message_list.messageList);
+                }
+            }
+            getMessage();
+        });
+    }
+    
+    function addMessage(list) {
+        var html_content = "";
+        for (var i = 0; i < list.length; i++) {
+            html_content += "<li>";
+            $li = $("<li></li>");
+            
+            var get_date = new Number(list[i].clientGetDate);
+            var send_date = new Number(list[i].sendDate);
+            var delay = get_date - send_date;
+            
+            var time_now = new Date().getTime();
+            var trans_delay = time_now - get_date;
+            
+            $delay_time = $("<span></span>");
+            $delay_time.append("Delay: " + delay + "ms&nbsp;Transfer: " + trans_delay + "ms&nbsp;&nbsp;");
+            $delay_time.attr("class", "time");
+            $li.append($delay_time);
+            $li.append("Message from&nbsp;");
+            
+            $from_id = $("<span></span>");
+            $from_id.attr("class", "from");
+            $from_id.append(list[i].fromId + ":&nbsp;");
+            $li.append($from_id);
+            
+            $content = $("<span></span>");
+            $content.append(list[i].content);
+            $content.attr("class", "content");
+            $li.append($content);
+            
+            html_content += $li.html();
+            html_content += "</li>";
+        }
+        displayMessage(html_content);
+    }
+    
+    function displayMessage(html_content) {
+        $("#message_area ul").append(html_content);
+    }
+  </script>
+</head>
+
+<body>
+  <h1 id="title">Instant Message By HTTP Long Polling</h1>
+  <hr />
+  <div id="message_area">
+    <ul></ul>
+  </div>
+</body>
+</html>
